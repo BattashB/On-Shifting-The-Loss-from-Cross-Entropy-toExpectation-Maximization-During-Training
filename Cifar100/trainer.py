@@ -14,10 +14,16 @@ from torch.utils.tensorboard import SummaryWriter
 import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+from models import *
 import resnet
+
+from models import resnet as res_net
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
+import pre_act_resnet
+import resnext29 
+
 
 arch_names = sorted(name for name in resnet.__dict__
     if name.islower() and not name.startswith("__")
@@ -32,7 +38,7 @@ parser.add_argument('--model', default='resnet',
                     choices=model_names)                   
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--epochs', default=90, type=int, metavar='N',
+parser.add_argument('--epochs', default=240, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -149,8 +155,21 @@ def main():
     ###extract a file that holds the env information###
     write_env(args)
     ###################################################
+    if args.arch == "preactresnet":
+       model = pre_act_resnet.PreActResNet18_CIFAR100()
+    elif args.arch == "resnext29":  
+       model = resnext29.resnext29_2_64()
+    elif args.arch == "res_net18":
+       model = res_net.res_net18() 
+    elif args.arch == "res_net34":
+       model = res_net.res_net34()  
+    elif args.arch == "shufflenetv2":
+       model =   shufflenetv2.shuffle_netv2()#models.__dict__[args.arch]()
 
-    model = resnet.__dict__[args.arch]()
+
+    else:
+       model = resnet.__dict__[args.arch]()
+
     print("Number of parameters:",count_parameters(model))
     model.cuda()
     if args.pretrained:
@@ -167,19 +186,7 @@ def main():
 
 
           
-    if args.extra_transform:
-        train_loader = torch.utils.data.DataLoader(
-            datasets.CIFAR100(root=args.data_path, train=True, transform=transforms.Compose([
-                transforms.RandomHorizontalFlip(),
-                transforms.RandomCrop(32, 4),
-                transforms.ToTensor(),
-                transforms.RandomErasing(0.2),
-                normalize,
-            ]), download=True),
-            batch_size=args.batch_size, shuffle=True,
-            num_workers=args.workers, pin_memory=True)
-    else:
-        train_loader = torch.utils.data.DataLoader(
+    train_loader = torch.utils.data.DataLoader(
             datasets.CIFAR100(root=args.data_path, train=True, transform=transforms.Compose([
                 transforms.RandomHorizontalFlip(),
                 transforms.RandomCrop(32, 4),
@@ -203,7 +210,7 @@ def main():
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
-                                                        milestones=[50, 75], last_epoch=args.start_epoch - 1)                                                           
+                                                        milestones=[120,160,200], last_epoch=args.start_epoch - 1)                                                           
 
 
     if args.arch in ['resnet1202', 'resnet110']:
