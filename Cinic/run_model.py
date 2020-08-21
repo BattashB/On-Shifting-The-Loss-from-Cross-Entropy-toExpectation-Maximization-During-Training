@@ -10,21 +10,15 @@ if __name__ == "__main__":
     F1 = "0,0.1,0.2,0.3,0.4,0.5"       
     arch = sys.argv[1]
     data = sys.argv[2]
-    seeds = [253,1234]#60,
-    
-    batch_size = 512
-    if arch == "res_next29_32x4d":
-        batch_size = 256
-    elif arch == "shufflenet" or arch == "resnet20" or arch == "resnet44" or arch == "res_net18" or arch == "resnet32" or arch == "vgg16":
-       batch_size = 1024
-       print("Batch Size:",batch_size)
-    for seed in seeds:
-       path = "experiments/"+str(arch)+"/"+str(arch)+"_seed" +str(seed)+"/baseline"
-       acc_path = "experiments/"+str(arch)+"/"+str(arch)+"_seed" +str(seed)+"/accloss_det"
+    gpu  = sys.argv[3]# gpu index
 
-       #if not os.path.exists(path) and not os.path.exists(acc_path):
-       # print("There is no such adress I'm getting in")
-       baseline          = subprocess.check_output("python3 main.py --save_path  experiments/"+str(arch)+"/"+str(arch)+"_seed"+str(seed)+"/baseline  --arch "+str(arch)+" --epochs 60 --b " + str(batch_size) + " --seed "+str(seed) + " --data " + data, shell=True)
-       accloss_det       = subprocess.check_output("python3 main.py --save_path experiments/"+str(arch)+"/"+str(arch)+"_seed"+str(seed)+"/accloss_det  --arch "+str(arch)+" --accloss True --epochs 60 --b " + str(batch_size) + " --seed "+str(seed)+ " --data " + data, shell=True)
-       #accloss_det05     = subprocess.check_output("python3 main.py --save_path experiments/"+str(arch)+"/"+str(arch)+"_seed"+str(seed)+"/accloss_det_F0_0.5_hf1.9 --arch "+str(arch)+" --accloss True --F "+ F+ " --hf 1.9 --epochs 60 --b " + str(batch_size) + " --seed "+str(seed)+ " --data " + data, shell=True)
-       #accloss_det0till5 = subprocess.check_output( "python3 main.py --save_path experiments/"+str(arch)+"/"+str(arch)+"_seed"+str(seed)+"/accloss_det_F0till0.5_hf1  --arch "+str(arch)+" --accloss True  --F "+ F1+ " --hf 1 --epochs 60 --b " + str(batch_size) + " --seed "+str(seed)+ " --data " + data, shell=True)
+    s = [60,253,1234]
+    os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
+    
+    batch_size = 256
+    cuda = "CUDA_VISISBLE_DEVICES="+str(gpu)
+    for seed in seeds:
+      baseline          = subprocess.check_output(cuda+" python3 main_90ep.py --save_path  experiments_b256_90ep/"+str(arch)+"/"+str(arch)+"_seed"+str(seed)+"/baseline  --arch "+str(arch)+" --epochs 90 --b " + str(batch_size) + " --seed "+str(seed) + " --data " + data, shell=True)
+      accloss_det       = subprocess.check_output(cuda+" python3 main_90ep.py --save_path experiments_b256_90ep/"+str(arch)+"/"+str(arch)+"_seed"+str(seed)+"/accloss_det  --arch "+str(arch)+" --accloss True --epochs 90 --b " + str(batch_size) + " --seed "+str(seed)+ " --data " + data, shell=True)
+      accloss_det05     = subprocess.check_output(cuda+" python3 main_90ep.py --save_path experiments_b256_90ep/"+str(arch)+"/"+str(arch)+"_seed"+str(seed)+"/accloss_det_F0_0.5_hf1.9 --arch "+str(arch)+" --accloss True --F "+ F+ " --hf 1.9 --epochs 90 --b " + str(batch_size) + " --seed "+str(seed)+ " --data " + data, shell=True)
+      accloss_det0till5 = subprocess.check_output(cuda+" python3 main_90ep.py --save_path experiments_b256_90ep/"+str(arch)+"/"+str(arch)+"_seed"+str(seed)+"/accloss_det_F0till0.5_hf1  --arch "+str(arch)+" --accloss True  --F "+ F1+ " --hf 1 --epochs 90 --b " + str(batch_size) + " --seed "+str(seed)+ " --data " + data, shell=True)
