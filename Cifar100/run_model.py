@@ -13,11 +13,11 @@ if __name__ == "__main__":
     print("###########################################")
     print("arch:",arch)
     print("###########################################")
-    seeds = [1234,60,253,692]
-    if "resnet" in arch:           
-      for seed in seeds:
-         #baseline      = subprocess.check_output("python3 trainer.py --save-dir experiments/"+str(arch)+"/"+str(arch)+"_seed"+str(seed)+"/baseline --model resnet --arch "+str(arch)+" --epochs 90  --seed "+str(seed), shell=True)
-         accloss_det   = subprocess.check_output("python3 trainer.py --save-dir experiments/"+str(arch)+"/"+str(arch)+"_seed"+str(seed)+"/accloss_det --model resnet --arch "+str(arch)+" --accloss True --epochs 90 --seed "+str(seed), shell=True)
-         accloss_det05 = subprocess.check_output("python3 trainer.py --save-dir experiments/"+str(arch)+"/"+str(arch)+"_seed"+str(seed)+"/accloss_det_F_0_0.5_hf1.9 --model resnet --arch "+str(arch)+" --accloss True  --F "+ F+ " --hf 1.9 --epochs 90  --seed "+str(seed), shell=True)
-         accloss_det0till05 = subprocess.check_output("python3 trainer.py --save-dir experiments/"+str(arch)+"/"+str(arch)+"_seed"+str(seed)+"/accloss_det_F_0till0.5_hf1 --model resnet --arch "+str(arch)+" --accloss True  --F "+ F1+ " --hf 1 --epochs 90  --seed "+str(seed), shell=True)
+    seeds = [60,253,692,1234]
+
+    for seed in seeds:
+         baseline      = subprocess.check_output("python3 trainer.py --save-dir experiments/"+str(arch)+"_0.5/"+str(arch)+"_seed"+str(seed)+"/baseline --model resnet --arch "+str(arch)+" --epochs 240  --seed "+str(seed), shell=True)
+         accloss_det   = subprocess.check_output("python3 trainer.py --save-dir experiments/"+str(arch)+"_0.5/"+str(arch)+"_seed"+str(seed)+"/accloss_det --model resnet --arch "+str(arch)+" --accloss True --epochs 240 --seed "+str(seed), shell=True)
+         accloss_det05 = subprocess.check_output("python3 trainer.py --save-dir experiments/"+str(arch)+"_0.5/"+str(arch)+"_seed"+str(seed)+"/accloss_det_F_0_0.5_hf1.9 --model resnet --arch "+str(arch)+" --accloss True  --F "+ F+ " --hf 1.9 --epochs 240  --seed "+str(seed), shell=True)
+         accloss_det0till05 = subprocess.check_output("python3 trainer.py --save-dir experiments/"+str(arch)+"_0.5/"+str(arch)+"_seed"+str(seed)+"/accloss_det_F_0till0.5_hf1 --model resnet --arch "+str(arch)+" --accloss True  --F "+ F1+ " --hf 1 --epochs 240  --seed "+str(seed), shell=True)
 
