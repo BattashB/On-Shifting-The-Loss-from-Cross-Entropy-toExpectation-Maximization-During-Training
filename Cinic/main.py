@@ -6,6 +6,7 @@ import os
 from datetime import datetime
 from torch.utils.tensorboard import SummaryWriter
 import collections
+import torchvision.models as tvmodels
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -20,6 +21,12 @@ import random
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
+from models import *
+
+import pre_act_resnet
+import resnext29
+import wide_resnet
+
 # pylint: disable=invalid-name,redefined-outer-name,global-statement
 
 model_names = sorted(name for name in models.__dict__ if not name.startswith(
@@ -28,14 +35,10 @@ best_acc = 0 # best test accuracy
 k = 0
 parser = argparse.ArgumentParser(description='PyTorch CINIC10 Training')
 parser.add_argument('--data',  default='data/cinic10')
-parser.add_argument('-a', '--arch', metavar='ARCH', default='vgg16',
-                    choices=model_names,
-                    help='model architecture: ' +
-                    ' | '.join(model_names) +
-                    ' (default: vgg16)')
+parser.add_argument('-a', '--arch', metavar='ARCH', default='vgg16')
 parser.add_argument('-j', '--workers', default=2, type=int, metavar='N',
                     help='number of data loading workers (default: 2)')
-parser.add_argument('--epochs', default=60, type=int, metavar='N',
+parser.add_argument('--epochs', default=90, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('-b', '--batch-size', default=64, type=int,
                     metavar='N',
@@ -61,7 +64,6 @@ parser.add_argument('--pretrained_path',type=str,default="")
 parser.add_argument('--resume',type=str,default="")
 parser.add_argument('--tb_filename', type=str)
 parser.add_argument('--hf', type=float,default=1)
-parser.add_argument('--extra_transform', type=bool, default=False)
 parser.add_argument('--accloss', type=bool, default=False)
 parser.add_argument('--seed', type=int,default=60)
 
@@ -128,7 +130,9 @@ def acc_func_deter(pred,target):
     y_soft = F.softmax(pred,dim)
     index = y_soft.max(dim, keepdim=True)[1]
     y_hard = torch.zeros_like(pred, memory_format=torch.legacy_contiguous_format).scatter_(dim, index, 1.0)
-    ret = y_hard - y_soft.detach() + y_soft    
+    ret = y_hard - y_soft.detach() + y_soft  
+    #print(target.shape,ret.shape)
+    #stop
     acc = torch.mean(torch.sum(ret*target,dim=-1))    
     one_minus_acc = 1 - acc
     return one_minus_acc
@@ -172,9 +176,16 @@ random.seed(args.seed)
 write_env(args)
 ############
 
-############
 print('==> Creating model {}...'.format(args.arch))
-model = models.__dict__[args.arch]().cuda()
+if args.arch == "preactresnet":
+   model = pre_act_resnet.preactresnet()
+elif args.arch == "resnext29":
+   model = resnext29.resnext29_2_64()
+elif args.arch =="shufflenetv2":
+    model =   shufflenetv2.shuffle_netv2()
+
+else:
+   model = models.__dict__[args.arch]().cuda()
 
 criterion = torch.nn.CrossEntropyLoss().cuda()
 optimizer = torch.optim.SGD(model.parameters(),
@@ -182,7 +193,7 @@ optimizer = torch.optim.SGD(model.parameters(),
                             momentum=args.momentum,
                             weight_decay=args.weight_decay)
 scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
-                                                        milestones=[30, 45]) 
+                                                        milestones=[30, 60]) 
 
 ###########################
 traindir = os.path.join(args.data, 'train_and_val')
@@ -195,7 +206,8 @@ transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=cinic_mean, std=cinic_std)
 ])
-extra_transform= not (args.arch == "shufflenet" or args.arch == "resnet20" or args.arch == "resnet32")
+extra_transform=  (count_parameters(model)>1000000)
+print("Extra_transform:",extra_transform)
 if extra_transform:
     train_transform = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
@@ -280,8 +292,6 @@ def train(epoch):
 def validate(epoch):
     ''' Validates the model's accuracy on validation dataset and saves if better
         accuracy than previously seen. '''
-    
-
     global best_acc
     model.eval()
     alpha = 0.1
