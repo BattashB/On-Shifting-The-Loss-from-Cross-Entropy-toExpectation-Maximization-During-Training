@@ -6,7 +6,6 @@ import os
 from datetime import datetime
 from torch.utils.tensorboard import SummaryWriter
 import collections
-import torchvision.models as tvmodels
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -25,7 +24,6 @@ from models import *
 
 import pre_act_resnet
 import resnext29
-import wide_resnet
 
 # pylint: disable=invalid-name,redefined-outer-name,global-statement
 
@@ -196,7 +194,7 @@ scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,
                                                         milestones=[30, 60]) 
 
 ###########################
-traindir = os.path.join(args.data, 'train_and_val')
+traindir = os.path.join(args.data, 'train')
 testdir = os.path.join(args.data, 'test')
 cinic_mean = [0.47889522, 0.47227842, 0.43047404]
 cinic_std = [0.24205776, 0.23828046, 0.25874835]
